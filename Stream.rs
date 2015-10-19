@@ -10,22 +10,23 @@ fn main() {
     stream1.next();
     stream1.set(7, 0);
     stream1.next();
-    println!("{}", stream1);
+    println!("{:?}", stream1);
 
     // str stream
     let mut stream2 : Stream<&'static str> = Stream::new("str_stream", 2i32);
     stream2.next();
     stream2.set("asdf", 0);
     stream2.next();
-    println!("{}", stream2);
+    println!("{:?}", stream2);
 
     // Option<int> stream
+    /*
     let mut stream3 : Stream<Option<i32>> = Stream::new("optint_stream", 3i32);
     stream3.next();
     stream3.set(Some(10i32), 0);
     stream3.next();
-    println!("{}", stream3);
-
+    println!("{:?}", stream3);
+    */
 }
 
 // ======================================================================
@@ -36,7 +37,7 @@ pub struct Stream<T> {
     params: i32,
 	id: &'static str,
 
-	index: u32,
+	index: usize,
 	buffer: Vec<T>,
 }
 
@@ -54,17 +55,17 @@ impl<T:Default> Stream<T> {
 
     }
 
-	pub fn get(&self, bars_ago: i32) -> &T {
+	pub fn get(&self, bars_ago: usize) -> &T {
 
         // sanity checks here
         let size = self.buffer.capacity();
-        &self.buffer[((self.index - bars_ago) % (size as i32)) as u32]
+        &self.buffer[(self.index - bars_ago) % size]
 	}
 
-    pub fn set(&mut self, value: T, bars_ago: i32) {
+    pub fn set(&mut self, value: T, bars_ago: usize) {
         let idx = self.index - bars_ago;
         let size = self.buffer.capacity();
-        self.buffer[(idx % size as i32) as u32] = value;
+        self.buffer[idx % size] = value;
     }
 
     pub fn next(&mut self) {
@@ -73,13 +74,13 @@ impl<T:Default> Stream<T> {
             self.buffer.push(Default::default());
         } else {
             let size = self.buffer.capacity();
-            self.buffer[(self.index % size as i32) as u32] = Default::default();
+            self.buffer[self.index % size] = Default::default();
         }
     }
 }
 
-impl<T:fmt::Display> fmt::Display for Stream<T> {
+impl<T:fmt::Debug> fmt::Debug for Stream<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        Ok(format!("{}", self.buffer));
+        Ok(format!("{:?}", self.buffer))
     }
 }
