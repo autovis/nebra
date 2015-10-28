@@ -8,7 +8,12 @@ fn main() {
     // int stream
     let mut stream1 : Stream<i32> = Stream::new("int_stream", 1i32);
     stream1.next();
-    stream1.set(7, 0);
+    stream1.set(1, 0);
+    stream1.next();
+    stream1.set(2, 0);
+    stream1.next();
+    stream1.set(3, 0);
+    stream1.set(4, 2);
     stream1.next();
     println!("{:?}", stream1);
 
@@ -20,13 +25,11 @@ fn main() {
     println!("{:?}", stream2);
 
     // Option<int> stream
-    /*
     let mut stream3 : Stream<Option<i32>> = Stream::new("optint_stream", 3i32);
     stream3.next();
     stream3.set(Some(10i32), 0);
     stream3.next();
     println!("{:?}", stream3);
-    */
 }
 
 // ======================================================================
@@ -37,7 +40,7 @@ pub struct Stream<T> {
     params: i32,
 	id: &'static str,
 
-	index: usize,
+	index: isize,
 	buffer: Vec<T>,
 }
 
@@ -59,11 +62,11 @@ impl<T:Default> Stream<T> {
 
         // sanity checks here
         let size = self.buffer.capacity();
-        &self.buffer[(self.index - bars_ago) % size]
+        &self.buffer[((self.index as usize) - bars_ago) % size]
 	}
 
     pub fn set(&mut self, value: T, bars_ago: usize) {
-        let idx = self.index - bars_ago;
+        let idx = (self.index as usize) - bars_ago;
         let size = self.buffer.capacity();
         self.buffer[idx % size] = value;
     }
@@ -74,13 +77,13 @@ impl<T:Default> Stream<T> {
             self.buffer.push(Default::default());
         } else {
             let size = self.buffer.capacity();
-            self.buffer[self.index % size] = Default::default();
+            self.buffer[(self.index as usize) % size] = Default::default();
         }
     }
 }
 
 impl<T:fmt::Debug> fmt::Debug for Stream<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        Ok(format!("{:?}", self.buffer))
+        write!(f, "{:?}", self.buffer)
     }
 }
