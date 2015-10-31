@@ -89,3 +89,39 @@ impl<T:fmt::Debug> fmt::Debug for Stream<T> {
         write!(f, "{:?}", self.buffer)
     }
 }
+
+/////////////////////////////////////////////////////////////////////
+
+// Input
+pub trait Input {}
+impl Input for () {}
+impl<A> Input for (Stream<A>) {}
+impl<A, B> Input for (Stream<A>, Stream<B>) {}
+impl<A, B, C> Input for (Stream<A>, Stream<B>, Stream<C>) {}
+
+// Output
+pub trait Output {}
+
+// Formula (general)
+pub trait Formula<I, O> where I : Input, O : Output {
+    fn init() -> Result<(), &'static str>;
+    fn update() -> Result<(), &'static str>;
+}
+
+/////////////////////////////////////////////////////////////////////
+
+// Formula (specific)
+#[allow(dead_code)]
+pub struct EMA<I, O> where I : Input, O : Output{
+    input: I,
+    output: O
+}
+
+impl<I, O> Formula<I, O> for EMA<I, O> where I : Input, O : Output {
+    fn init() -> Result<(), &'static str> {
+        Ok(())
+    }
+    fn update() -> Result<(), &'static str> {
+        Ok(())
+    }
+}
