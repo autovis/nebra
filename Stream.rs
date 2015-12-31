@@ -38,6 +38,11 @@ fn main() {
     stream3.set(Some(10), 0);
     stream3.next();
     println!("{:?}", stream3);
+    
+    // Formula
+    let mut istream : Stream<f32> = Stream::new("istream", 10);
+    let mut dsize = Doublesize::new((istream,));
+    
 }
 
 // ======================================================================
@@ -82,6 +87,10 @@ impl<T:Default> Stream<T> {
             self.buffer[(self.index as usize) % size] = Default::default();
         }
     }
+    
+    pub fn index(&mut self) -> isize {
+        self.index
+    }
 }
 
 impl<T:fmt::Debug> fmt::Debug for Stream<T> {
@@ -92,36 +101,48 @@ impl<T:fmt::Debug> fmt::Debug for Stream<T> {
 
 /////////////////////////////////////////////////////////////////////
 
-// Input
-pub trait Input {}
-impl Input for () {}
-impl<A> Input for (Stream<A>) {}
-impl<A, B> Input for (Stream<A>, Stream<B>) {}
-impl<A, B, C> Input for (Stream<A>, Stream<B>, Stream<C>) {}
-
-// Output
-pub trait Output {}
-
 // Formula (general)
-pub trait Formula<I, O> where I : Input, O : Output {
-    fn init() -> Result<(), &'static str>;
-    fn update() -> Result<(), &'static str>;
+pub trait Formula<I, O> {
+    fn init(&mut self) -> Result<(), &'static str>;
+    fn update(&mut self) -> Result<(), &'static str>;
+    fn index(&mut self) -> isize;
 }
 
 /////////////////////////////////////////////////////////////////////
 
+pub type DoublesizeInput = (Stream<f32>,);
+pub type DoublesizeOutput = Stream<f32>;
+
 // Formula (specific)
 #[allow(dead_code)]
-pub struct EMA<I, O> where I : Input, O : Output{
-    input: I,
-    output: O
+pub struct Doublesize {
+    input: DoublesizeInput,
+    output: DoublesizeOutput
 }
 
-impl<I, O> Formula<I, O> for EMA<I, O> where I : Input, O : Output {
-    fn init() -> Result<(), &'static str> {
+impl Doublesize {
+    pub fn new(input : DoublesizeInput) -> Doublesize {
+        Doublesize {
+            input: input,
+            output: Stream::new("output", 100)
+        }
+    }
+}
+
+impl Formula<DoublesizeInput, DoublesizeOutput> for Doublesize {
+    fn init(&mut self) -> Result<(), &'static str> {
         Ok(())
     }
-    fn update() -> Result<(), &'static str> {
+    fn update(&mut self) -> Result<(), &'static str> {
+        if self.index() == -1 {return Err("Uninitialized output stream")}
+        let out = match self.index() {
+            0 => self.input.0.get(0) * 2.0,
+            _ => Default::default()
+        };
+        self.output.set(out, 0);
         Ok(())
+    }
+    fn index(&mut self) -> isize {
+        self.output.index()
     }
 }
