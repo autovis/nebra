@@ -3,6 +3,8 @@ use std::fmt;
 use std::default::Default;
 
 #[allow(dead_code)]
+#[allow(unused_variables)]
+#[allow(unused_mut)]
 fn main() {
 
     // int stream
@@ -41,7 +43,11 @@ fn main() {
     
     // Formula
     let mut istream : Stream<f32> = Stream::new("istream", 10);
-    let mut dsize = Doublesize::new((istream,));
+    let mut dsize = Doublesize::new(&istream);
+    istream.next();
+    istream.set(1.0, 0);
+    dsize.update();
+    println!("{:?}", istream);
     
 }
 
@@ -110,18 +116,15 @@ pub trait Formula<I, O> {
 
 /////////////////////////////////////////////////////////////////////
 
-pub type DoublesizeInput = (Stream<f32>,);
-pub type DoublesizeOutput = Stream<f32>;
-
 // Formula (specific)
 #[allow(dead_code)]
-pub struct Doublesize {
-    input: DoublesizeInput,
-    output: DoublesizeOutput
+pub struct Doublesize<'a> {
+    input: &'a Stream<f32>,
+    output: Stream<f32>
 }
 
-impl Doublesize {
-    pub fn new(input : DoublesizeInput) -> Doublesize {
+impl<'a> Doublesize<'a> {
+    pub fn new(input : &'a Stream<f32>) -> Doublesize {
         Doublesize {
             input: input,
             output: Stream::new("output", 100)
@@ -129,16 +132,17 @@ impl Doublesize {
     }
 }
 
-impl Formula<DoublesizeInput, DoublesizeOutput> for Doublesize {
+impl<'a> Formula<&'a Stream<f32>, Stream<f32>> for Doublesize<'a> {
     fn init(&mut self) -> Result<(), &'static str> {
         Ok(())
     }
     fn update(&mut self) -> Result<(), &'static str> {
         if self.index() == -1 {return Err("Uninitialized output stream")}
         let out = match self.index() {
-            0 => self.input.0.get(0) * 2.0,
+            0 => self.input.get(0) * 2.0,
             _ => Default::default()
         };
+        self.output.next();
         self.output.set(out, 0);
         Ok(())
     }
