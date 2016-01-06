@@ -1,6 +1,6 @@
-
 use std::fmt;
 use std::default::Default;
+use std::cell::{Cell, RefCell};
 
 #[allow(dead_code)]
 #[allow(unused_variables)]
@@ -42,7 +42,7 @@ fn main() {
     println!("{:?}", stream3);
     
     // Formula
-    let mut istream : Stream<f32> = Stream::new("istream", 10);
+    let istream = Stream::new("istream", 10);
     let mut dsize = Doublesize::new(&istream);
     istream.next();
     istream.set(1.0, 0);
@@ -57,8 +57,8 @@ fn main() {
 pub struct Stream<T> {
 	id: &'static str,
     size: usize,
-	index: isize,
-	buffer: Vec<T>,
+	index: Cell<isize>,
+	buffer: RefCell<Vec<T>>,
 }
 
 #[allow(dead_code)]
@@ -67,35 +67,40 @@ impl<T:Default> Stream<T> {
     pub fn new(id: &'static str, size: usize) -> Stream<T> {
         Stream {
             size: size,
-            buffer: Vec::with_capacity(size),
-            index: -1,
+            buffer: RefCell::new(Vec::with_capacity(size)),
+            index: Cell::new(-1),
             id: id
         }
     }
 
 	pub fn get(&self, bars_ago: usize) -> &T {
-        let size = self.buffer.capacity();
-        &self.buffer[((self.index as usize) - bars_ago) % size]
+	    let bor = self.buffer.borrow();
+	    let retval : &T;
+	    unsafe {
+            let size = bor.capacity();
+            retval = bor.get_unchecked(((self.index() as usize) - bars_ago) % size);
+        }
+        retval
 	}
 
-    pub fn set(&mut self, value: T, bars_ago: usize) {
-        let idx = (self.index as usize) - bars_ago;
-        let size = self.buffer.capacity();
-        self.buffer[idx % size] = value;
+    pub fn set(&self, value: T, bars_ago: usize) {
+        let idx = (self.index() as usize) - bars_ago;
+        let size = self.buffer.borrow().capacity();
+        self.buffer.borrow()[idx % size] = value;
     }
 
-    pub fn next(&mut self) {
-        self.index += 1;
-        if self.buffer.len() < self.buffer.capacity() {
-            self.buffer.push(Default::default());
+    pub fn next(&self) {
+        self.index.set(self.index.get() + 1);
+        if self.buffer.borrow().len() < self.buffer.borrow().capacity() {
+            self.buffer.borrow().push(Default::default());
         } else {
-            let size = self.buffer.capacity();
-            self.buffer[(self.index as usize) % size] = Default::default();
+            let size = self.buffer.borrow().capacity();
+            self.buffer.borrow()[(self.index.get() as usize) % size] = Default::default();
         }
     }
     
-    pub fn index(&mut self) -> isize {
-        self.index
+    pub fn index(&self) -> isize {
+        self.index.get()
     }
 }
 
@@ -139,8 +144,8 @@ impl<'a> Formula<&'a Stream<f32>, Stream<f32>> for Doublesize<'a> {
     fn update(&mut self) -> Result<(), &'static str> {
         if self.index() == -1 {return Err("Uninitialized output stream")}
         let out = match self.index() {
-            0 => self.input.get(0) * 2.0,
-            _ => Default::default()
+            0 => Default::default(),
+            _ => self.input.get(0) * 2.0
         };
         self.output.next();
         self.output.set(out, 0);
