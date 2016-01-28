@@ -2,6 +2,14 @@ use std::fmt;
 use std::default::Default;
 use std::cell::{Cell, RefCell};
 
+// Stream setup:
+// --------------------
+// trait Stream {...}
+// struct RootStream {...}
+// struct SubStream {parent: Stream, subname: String}
+// impl Stream for RootStream
+// impl Stream for SubStream
+
 #[allow(dead_code)]
 #[allow(unused_variables)]
 #[allow(unused_mut)]
