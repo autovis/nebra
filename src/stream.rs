@@ -1,3 +1,4 @@
+
 use std::fmt;
 use std::default::Default;
 use std::cell::{Cell, RefCell};
@@ -10,10 +11,11 @@ use std::cell::{Cell, RefCell};
 // impl Stream for RootStream
 // impl Stream for SubStream
 
+#[test]
 #[allow(dead_code)]
 #[allow(unused_variables)]
 #[allow(unused_mut)]
-fn main() {
+fn stream_check() {
 
     // int stream
     let mut stream1 : Stream<isize> = Stream::new("int_stream", 10);
@@ -26,7 +28,7 @@ fn main() {
     stream1.next();
     stream1.set(4, 0);
     //stream1.next();
-    
+
     println!("{:?}", stream1);
     println!("{:?} {:?} {:?}", stream1.get(0), stream1.get(1), stream1.get(2));
     println!("idx: {:?}", stream1.index);
@@ -48,7 +50,7 @@ fn main() {
     stream3.set(Some(10), 0);
     stream3.next();
     println!("{:?}", stream3);
-    
+
     // Formula
     let istream = Stream::new("istream", 10);
     let mut dsize = Doublesize::new(&istream);
@@ -56,7 +58,7 @@ fn main() {
     istream.set(1.0, 0);
     dsize.update();
     println!("{:?}", istream);
-    
+
 }
 
 // ======================================================================
@@ -106,7 +108,7 @@ impl<T:Default> Stream<T> {
             self.buffer.borrow()[(self.index.get() as usize) % size] = Default::default();
         }
     }
-    
+
     pub fn index(&self) -> isize {
         self.index.get()
     }

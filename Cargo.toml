@@ -1,0 +1,6 @@
+[package]
+name = "nebra"
+version = "0.1.0"
+authors = ["autovis <autovisgit@gmail.com>"]
+
+[dependencies]
